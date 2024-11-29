@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>智慧助手</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #ffffff;
+            color: #374151;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 头部样式 */
+        .header {
+            padding: 16px;
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        /* 聊天容器样式 */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            padding-bottom: 120px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* 消息样式 */
+        .message {
+            position: relative;
+            margin-bottom: 5px;
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .ai-message {
+            align-self: flex-start;
+            background: #f3f4f6;
+            color: #374151;
+            border-bottom-left-radius: 4px;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background: #10b981;
+            color: #ffffff;
+            border-bottom-right-radius: 4px;
+        }
+
+        /* 输入区域样式 */
+        .input-area {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border-top: 1px solid #e5e7eb;
+            padding: 16px;
+            z-index: 1000;
+        }
+
+        .input-container {
+            max-width: 48rem;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* 现代按钮样式 */
+        .circle-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            background: none;
+        }
+
+.circle-button.primary {
+    background-color: #e5e7eb;
+}
+
+.circle-button.primary:hover {
+    background-color: #d1d5db;
+}
+
+        .circle-button.secondary {
+            background-color: #f3f4f6;
+        }
+
+        .circle-button.secondary:hover {
+            background-color: #e5e7eb;
+        }
+
+        /* 输入框样式 */
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 24px;
+            transition: border-color 0.2s ease;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: #10b981;
+        }
+
+        #user-input {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 15px;
+            border: none;
+            background: transparent;
+            border-radius: 24px;
+            color: #374151;
+            resize: none;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        #user-input:focus {
+            outline: none;
+        }
+
+        /* 语音按钮样式 */
+        #voice-button {
+            width: 100%;
+            padding: 12px 16px;
+            text-align: center;
+            border-radius: 24px;
+            background-color: #f3f4f6;
+            color: #4b5563;
+            font-size: 15px;
+            border: none;
+            cursor: pointer;
+            display: none;
+        }
+
+        #voice-button:active {
+            background-color: #e5e7eb;
+        }
+
+/* Markdown 样式 */
+.list-item {
+    margin: 8px 0;
+    line-height: 1.6;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding-left: 8px;
+}
+
+.ordered-list-item {
+    counter-increment: item;
+    padding-left: 0;
+}
+
+.list-number {
+    min-width: 24px;
+    color: #666;
+    font-weight: 500;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.bullet-point {
+    min-width: 16px;
+    color: #666;
+    font-weight: bold;
+    text-align: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.list-content {
+    flex: 1;
+    color: #374151;
+}
+
+/* 嵌套列表样式 */
+.list-item .list-item {
+    margin: 4px 0 4px 24px;
+}
+
+/* 列表组样式 */
+.list-group {
+    margin: 16px 0;
+}
+
+/* 列表项悬停效果 */
+.list-item:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 4px;
+}
+
+/* Markdown 基础样式 */
+.markdown-paragraph {
+    margin: 8px 0;
+    line-height: 1.6;
+    color: #374151;
+}
+
+.markdown-heading {
+    color: #111827;
+    line-height: 1.4;
+    margin: 16px 0 8px 0;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* 新增样式 */
+.poetry-line {
+    margin: 4px 0;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+.poetry-line-break {
+    height: 1em;
+}
+
+.markdown-paragraph br {
+    margin-bottom: 0.5em;
+    display: block;
+    content: "";
+}
+/* 代码样式优化 */
+.message pre {
+    background: #282c34;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 8px 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.message code {
+    font-family: 'SF Mono', Consolas, Monaco, 'Courier New', monospace;
+    font-size: 14px;
+    padding: 2px 4px;
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 4px;
+}
+
+.message pre code {
+    background: none;
+    padding: 0;
+    color: #abb2bf;
+}
+
+/* 表格容器样式 */
+.overflow-x-auto {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    margin: 16px 0;
+    padding: 1px;
+}
+
+/* 表格基础样式 */
+.markdown-table {
+    width: 100%;
+    border-collapse: collapse;  /* 改回 collapse */
+    margin: 0;
+    font-size: 14px;
+}
+
+/* 表格头部样式 */
+.markdown-table th {
+    background: #f8fafc;
+    font-weight: 600;
+    text-align: left;
+    padding: 12px 16px;
+    border: 1px solid #e2e8f0;  /* 添加边框 */
+    color: #1e293b;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* 表格单元格样式 */
+.markdown-table td {
+    padding: 12px 16px;
+    border: 1px solid #e2e8f0;  /* 添加边框 */
+    color: #334155;
+    transition: background-color 0.2s ease;
+}
+
+/* 表格行悬停效果 */
+.markdown-table tr:hover td {
+    background-color: #f8fafc;
+}
+
+/* 斑马纹效果 */
+.markdown-table tr:nth-child(even) td {
+    background-color: #fafafa;
+}
+
+/* 数字列右对齐 */
+.markdown-table td.numeric {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+    .markdown-table {
+        font-size: 13px;
+    }
+    
+    .markdown-table th,
+    .markdown-table td {
+        padding: 10px 12px;
+    }
+    
+    .markdown-heading {
+        margin: 12px 0 6px 0;
+    }
+    
+    .markdown-paragraph {
+        margin: 6px 0;
+    }
+}
+/* 发送按钮样式 */
+.send-icon {
+    width: 16px;
+    height: 16px;
+    fill: white;
+}
+
+#send-button.circle-button.primary {
+    width: 40px;
+    height: 40px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #10b981;
+    transition: background-color 0.2s ease;
+    border: none;
+    padding: 0;
+}
+
+#send-button.circle-button.primary:hover {
+    background-color: #059669;
+}
+        /* 图片预览样式 */
+        .image-preview-container {
+            position: absolute;
+            bottom: 100%;
+            left: 16px;
+            margin-bottom: 8px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .image-preview {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .remove-image {
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 加载动画 */
+        .loading-dots {
+            display: inline-flex;
+            align-items: center;
+            height: 20px;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            margin: 0 2px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: dot-flashing 1s infinite linear alternate;
+        }
+
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes dot-flashing {
+            0% { opacity: 0.2; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 640px) {
+            .message {
+                max-width: 90%;
+                font-size: 14px;
+            }
+
+            .input-container {
+                gap: 8px;
+            }
+
+            .circle-button {
+                width: 36px;
+                height: 36px;
+            }
+        }
+
+        /* 复制按钮样式 */
+        .copy-btn {
+            position: absolute;
+            right: -32px;
+            bottom: 0;
+            width: 24px;
+            height: 24px;
+            padding: 4px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* 确保消息容器有正确的定位 */
+        .message {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .message-wrapper {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>智慧助手</h1>
+    </header>
+
+    <div id="chat-container" class="chat-container">
+        <div class="message-wrapper">
+            <div class="message ai-message">
+                Hi！新的一天，有什么新的问题？
+            </div>
+        </div>
+    </div>
+
+    <div class="input-area">
+        <div class="input-container">
+            <!-- 语音/键盘切换按钮 -->
+            <button id="toggle-mode" class="circle-button secondary" title="切换到语音">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-gray-600">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                    <line x1="12" y1="19" x2="12" y2="23"/>
+                    <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+            </button>
+
+            <!-- 输入包装器 -->
+            <div class="input-wrapper">
+                <!-- 语音输入按钮 -->
+                <button id="voice-button">按住说话</button>
+                
+                <!-- 文本输入框 -->
+                <input type="text" 
+                       id="user-input" 
+                       placeholder="发送消息..." 
+                       autocomplete="off">
+            </div>
+
+<!-- 发送按钮 -->
+<button id="send-button"
+        class="circle-button primary"
+        title="发送消息">
+    <svg class="send-icon" viewBox="0 0 24 24">
+        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+    </svg>
+</button>
+
+            <!-- 图片上传 -->
+            <label class="circle-button secondary" title="上传图片">
+                <input type="file" 
+                       id="image-upload" 
+                       accept="image/*" 
+                       style="display: none">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-gray-600">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                </svg>
+            </label>
+        </div>
+    </div>
+
+    <script>
+// Markdown 处理核心
+const MarkdownProcessor = {
+    // 配置对象
+    config: {
+        lineBreakMode: 'normal', // 'normal', 'preserve', 'compact'
+        preserveSpaces: true,    // 保留空格
+        autoDetectPoetry: true   // 自动检测诗歌格式
+    },
+
+    // 处理整个 Markdown 文本
+    processMarkdown(text) {
+        // 处理代码块和行内代码
+        const { text: codeProcessed, codeBlocks } = this.processCodeBlocks(text);
+        const { text: inlineProcessed, inlineCodes } = this.processInlineCode(codeProcessed);
+        
+        // 处理表格
+        const { text: tableProcessed, tables } = this.processTables(inlineProcessed);
+        
+        // 先处理加粗等行内样式
+        let processedText = this.processInlineStyling(tableProcessed);
+        
+        // 处理列表（确保在处理标题和段落之前）
+        processedText = this.processList(processedText);
+        
+        // 处理标题
+        processedText = this.processHeadings(processedText);
+        
+        // 处理段落和换行
+        processedText = this.processLineBreaks(processedText);
+        
+        // 恢复所有特殊内容
+        codeBlocks.forEach((block, index) => {
+            processedText = processedText.replace(`__CODE_BLOCK_${index}__`, block);
+        });
+        inlineCodes.forEach((code, index) => {
+            processedText = processedText.replace(`__INLINE_CODE_${index}__`, code);
+        });
+        tables.forEach((table, index) => {
+            processedText = processedText.replace(`__TABLE_${index}__`, table);
+        });
+
+        return processedText;
+    },
+
+    // 处理代码块
+    processCodeBlocks(text) {
+        const codeBlocks = [];
+        return {
+            text: text.replace(/```(\w*)\n([\s\S]*?)```/g, (match, language, code) => {
+                const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`;
+                codeBlocks.push(`<pre><code class="language-${language}">${code.trim()}</code></pre>`);
+                return placeholder;
+            }),
+            codeBlocks
+        };
+    },
+
+    // 处理行内代码
+    processInlineCode(text) {
+        const inlineCodes = [];
+        return {
+            text: text.replace(/`([^`]+)`/g, (match, code) => {
+                const placeholder = `__INLINE_CODE_${inlineCodes.length}__`;
+                inlineCodes.push(`<code>${code}</code>`);
+                return placeholder;
+            }),
+            inlineCodes
+        };
+    },
+
+    // 处理表格
+    processTables(text) {
+        if (!text.includes('|')) return { text, tables: [] };
+        
+        const tables = [];
+        return {
+            text: text.replace(/(?:(?:\r?\n){2}|^)(?:\|.+\|(?:\r?\n|\r))+/g, function(match) {
+                const placeholder = `__TABLE_${tables.length}__`;
+                const lines = match.split('\n').filter(line => {
+                    const trimmed = line.trim();
+                    return trimmed && trimmed !== '|' && /\|/.test(trimmed);
+                });
+                
+                if (lines.length < 2) return match;
+
+                const tableHtml = this.buildTableHTML(lines);
+                tables.push(tableHtml);
+                return placeholder;
+            }.bind(this)),
+            tables
+        };
+    },
+
+    // 构建表格 HTML
+    buildTableHTML(lines) {
+        let tableHtml = '<div class="overflow-x-auto"><table class="markdown-table">';
+        let columnCount = 0;
+        let hasHeader = false;
+
+        lines.forEach((line, rowIndex) => {
+            const normalizedLine = line.trim().replace(/^\||\|$/g, '');
+            const cells = normalizedLine.split('|').map(cell => cell.trim());
+
+            if (rowIndex === 0) columnCount = cells.length;
+
+            if (line.match(/^\s*\|?\s*[-:]+[-|\s:]*[-:]+\s*\|?\s*$/)) {
+                hasHeader = true;
+                return;
+            }
+
+            if (cells.length > 0) {
+                tableHtml += this.buildTableRow(cells, columnCount, hasHeader && rowIndex === 0);
+            }
+        });
+
+        return tableHtml + '</table></div>';
+    },
+
+    // 构建表格行
+    buildTableRow(cells, columnCount, isHeader) {
+        let rowHtml = '<tr>';
+        for (let i = 0; i < columnCount; i++) {
+            const cellContent = cells[i] || '';
+            const tag = isHeader ? 'th' : 'td';
+            const processedContent = this.processInlineStyling(cellContent);
+            rowHtml += `<${tag}>${processedContent || '&nbsp;'}</${tag}>`;
+        }
+        return rowHtml + '</tr>';
+    },
+
+    // 处理行内样式
+    processInlineStyling(content) {
+        return content
+            .replace(/\*\*([^*\n]+?)\*\*/g, '<strong>$1</strong>')  // 加粗
+            .replace(/\*([^*\n]+?)\*/g, '<em>$1</em>')             // 斜体
+            .replace(/`([^`]+?)`/g, '<code>$1</code>')             // 行内代码
+            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>'); // 链接
+    },
+
+    // 处理列表
+    processList(text) {
+        let processed = text;
+        
+        // 处理有序列表
+        processed = processed.replace(
+            /(?:^|\n)(\d+)\.\s+([^\n]+)(?=\n|$)/g,
+            (match, number, content) => {
+                const processedContent = this.processInlineStyling(content);
+            return `\n<div class="list-item ordered-list-item">
+                      <span class="list-number">${number}.</span>
+                          <span class="list-content">${processedContent}</span>
+                    </div>`;
+            }
+        );
+        
+        // 处理无序列表
+        processed = processed.replace(
+            /^(\s*)[*\-•]\s+(.+)$/gm,
+            (match, indent, content) => {
+            const level = Math.floor(indent.length / 2);
+                const processedContent = this.processInlineStyling(content);
+                return `<div class="list-item" style="padding-left: ${level * 24}px">
+                      <span class="bullet-point">•</span>
+                          <span class="list-content">${processedContent}</span>
+                    </div>`;
+            }
+        );
+
+        // 处理段落中的数字编号
+        processed = processed.replace(
+            /(\d+)\.\s+(?!\<)([^<\n]+)(?=\n|$)/g,
+            (match, number, content) => {
+                const processedContent = this.processInlineStyling(content);
+                return `<div class="list-item ordered-list-item">
+                          <span class="list-number">${number}.</span>
+                          <span class="list-content">${processedContent}</span>
+                        </div>`;
+            }
+        );
+
+        return processed;
+    },
+
+    // 处理标题
+    processHeadings(text) {
+        return text.replace(/^(#{1,6})\s+([^\n]+)/gm, (match, hashes, content) => {
+            const level = hashes.length;
+            const fontSize = Math.max(18 - (level - 1) * 2, 14);
+            return `<div class="markdown-heading" style="font-size: ${fontSize}px;">${content}</div>`;
+        });
+    },
+
+    // 处理换行和段落
+    processLineBreaks(text) {
+        // 保护特殊内容
+        const protectedContent = [];
+        let protectedText = text.replace(
+            /(```[\s\S]*?```)|(`[^`]*`)|(<table[\s\S]*?<\/table>)|(<pre[\s\S]*?<\/pre>)/g,
+            (match) => {
+                protectedContent.push(match);
+                return `__PROTECTED_${protectedContent.length - 1}__`;
+            }
+        );
+
+        // 检测是否是诗歌格式
+        const isPoetry = this.config.autoDetectPoetry && this.detectPoetryFormat(protectedText);
+
+        // 根据不同模式处理换行
+        if (isPoetry || this.config.lineBreakMode === 'preserve') {
+            // 诗歌格式或保留模式：保持原有换行
+            protectedText = protectedText
+                .split('\n')
+                .map(line => {
+                    const trimmed = line.trim();
+                    if (trimmed) {
+                        const indentation = line.match(/^\s*/)[0].length;
+                        const style = indentation ? ` style="margin-left: ${indentation * 0.5}em;"` : '';
+                        return `<div class="poetry-line"${style}>${trimmed}</div>`;
+                    }
+                    return '<div class="poetry-line-break"></div>';
+                })
+                .join('\n');
+        } else if (this.config.lineBreakMode === 'compact') {
+            // 紧凑模式：只在段落间换行
+            protectedText = protectedText
+                .split(/\n{2,}/)
+                .map(paragraph => {
+                    const trimmed = paragraph.trim();
+                    if (trimmed && !this.isWrappedInHTML(trimmed)) {
+                        return `<div class="markdown-paragraph">${trimmed.replace(/\n/g, ' ')}</div>`;
+                    }
+                    return trimmed;
+                })
+                .filter(Boolean)
+                .join('\n');
+        } else {
+            // 普通模式：处理单换行和段落
+            protectedText = protectedText
+                .split(/\n{2,}/)
+                .map(paragraph => {
+                    const trimmed = paragraph.trim();
+                    if (trimmed && !this.isWrappedInHTML(trimmed)) {
+                        // 处理行末两空格换行和普通换行
+                        const processed = trimmed
+                            .split('\n')
+                            .map(line => {
+                                if (line.endsWith('  ')) {
+                                    return line.slice(0, -2) + '<br>';
+                                }
+                                return line;
+                            })
+                            .join(' ');
+                        return `<div class="markdown-paragraph">${processed}</div>`;
+                    }
+                    return trimmed;
+                })
+                .filter(Boolean)
+                .join('\n');
+        }
+
+        // 恢复受保护的内容
+        protectedText = protectedText.replace(/__PROTECTED_(\d+)__/g, (_, index) => {
+            return protectedContent[parseInt(index)];
+        });
+
+        return protectedText;
+    },
+
+    // 检查是否已经被HTML标签包裹
+    isWrappedInHTML(text) {
+        return /^<([a-z]+)[^>]*>[\s\S]*<\/\1>$/i.test(text.trim());
+    },
+
+    // 检测是否是诗歌格式
+    detectPoetryFormat(text) {
+        const lines = text.split('\n').filter(line => line.trim());
+        if (lines.length < 2) return false;
+
+        // 检查平均行长度和行数
+        const avgLength = lines.reduce((sum, line) => sum + line.trim().length, 0) / lines.length;
+        const shortLines = lines.filter(line => line.trim().length < 50).length;
+        const lineRatio = shortLines / lines.length;
+
+        // 检查缩进模式
+        const hasIndentation = lines.some(line => /^\s+/.test(line));
+        
+        // 如果大部分行都很短，且有缩进模式，可能是诗歌
+        return avgLength < 40 && lineRatio > 0.8 && hasIndentation;
+    }
+};
+
+        // 配置常量
+        const CONFIG = {
+            API_KEY: 'sk-FYibdcaa7742386ad2c172e035845e7f5e319762e541g4p3',
+            API_URL: 'https://api.gptsapi.net/v1/chat/completions',
+            VOICE_API_URL: 'https://api.gptsapi.net/v1/audio/transcriptions',
+            SYSTEM_PROMPT: "避免幻觉，详细认真回复用户问题，支持最直接输出表格，不用代码块，用中文",
+            MAX_RETRIES: 3,
+            RETRY_DELAY: 1000,
+            SUPPORTED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+            MAX_IMAGE_SIZE: 10 * 1024 * 1024
+        };
+
+        // 状态管理
+        let messages = [
+            {
+                role: "system",
+                content: CONFIG.SYSTEM_PROMPT
+            }
+        ];
+        let isProcessing = false;
+        let currentImage = null;
+
+        // UI 组件类
+        class UI {
+            static createMessage(content, isUser, imageData = null) {
+                console.log('Creating message:', { content, isUser }); // 调试日志
+                
+                const wrapper = document.createElement('div');
+                wrapper.className = 'message-wrapper';
+                
+                const message = document.createElement('div');
+                message.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+                
+                // 添加消息内容
+                if (content) {
+                    if (!isUser) {
+                        // AI消息
+                        const contentDiv = document.createElement('div');
+                        contentDiv.innerHTML = this.processMarkdown(content);
+                        message.appendChild(contentDiv);
+                        
+                        // 添加复制按钮
+                        const copyBtn = document.createElement('button');
+                        copyBtn.className = 'copy-btn';
+                        copyBtn.textContent = '复制';
+                        copyBtn.style.cssText = `
+                            position: absolute;
+                            right: 0;
+                            bottom: -25px;
+                            padding: 4px 8px;
+                            background: white;
+                            border: 1px solid #ddd;
+                            border-radius: 4px;
+                            font-size: 12px;
+                            cursor: pointer;
+                            z-index: 2;
+                        `;
+                        
+                        copyBtn.onclick = () => {
+                            console.log('Copy button clicked'); // 调试日志
+                            navigator.clipboard.writeText(contentDiv.innerText)
+                                .then(() => {
+                                    copyBtn.textContent = '已复制';
+                                    setTimeout(() => copyBtn.textContent = '复制', 1000);
+                                })
+                                .catch(err => console.error('Copy failed:', err));
+                        };
+                        
+                        message.appendChild(copyBtn);
+                    } else {
+                        // 用户消息
+                        message.textContent = content;
+                    }
+                }
+                
+                // 处理图片
+                if (imageData && isUser) {
+                    const img = document.createElement('img');
+                    img.src = `data:${imageData.type};base64,${imageData.base64}`;
+                    img.alt = '用户上传的图片';
+                    img.style.maxWidth = '100%';
+                    img.style.borderRadius = '8px';
+                    img.style.marginTop = '8px';
+                    message.appendChild(img);
+                }
+                
+                wrapper.appendChild(message);
+                console.log('Message created:', wrapper); // 调试日志
+                return wrapper;
+            }
+
+            static createLoadingMessage() {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'message-wrapper';
+                
+                const message = document.createElement('div');
+                message.className = 'message ai-message';
+                
+                const loadingDots = document.createElement('div');
+                loadingDots.className = 'loading-dots';
+                loadingDots.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+                
+                message.appendChild(loadingDots);
+                wrapper.appendChild(message);
+                return wrapper;
+            }
+
+static processMarkdown(text) {
+    // 先处理代码块和行内代码
+    const { text: codeProcessed, codeBlocks } = MarkdownProcessor.processCodeBlocks(text);
+    const { text: inlineProcessed, inlineCodes } = MarkdownProcessor.processInlineCode(codeProcessed);
+    
+    // 处理表格
+    const { text: tableProcessed, tables } = MarkdownProcessor.processTables(inlineProcessed);
+    
+    // 处理列表和其他格式
+    let processedText = MarkdownProcessor.processList(tableProcessed);
+    processedText = MarkdownProcessor.processHeadings(processedText);
+    processedText = MarkdownProcessor.processInlineStyling(processedText);
+    processedText = MarkdownProcessor.processLineBreaks(processedText);
+    
+    // 恢复所有特殊内容
+    codeBlocks.forEach((block, index) => {
+        processedText = processedText.replace(`__CODE_BLOCK_${index}__`, block);
+    });
+    inlineCodes.forEach((code, index) => {
+        processedText = processedText.replace(`__INLINE_CODE_${index}__`, code);
+    });
+    tables.forEach((table, index) => {
+        processedText = processedText.replace(`__TABLE_${index}__`, table);
+    });
+
+    return processedText;
+}
+        }
+
+
+// 语音输入类
+class VoiceInput {
+    constructor() {
+        this.isVoiceMode = false;
+        this.isRecording = false;
+        this.mediaRecorder = null;
+        this.audioChunks = [];
+        this.stream = null;
+        this.permissionGranted = false;
+        this.isInitializing = false;
+        this.lastTouchEnd = 0;
+        this.recordingStartTime = 0;
+        
+        // DOM 元素
+        this.toggleButton = document.getElementById('toggle-mode');
+        this.voiceButton = document.getElementById('voice-button');
+        this.textInput = document.getElementById('user-input');
+        
+        // 初始化事件监听
+        this.initializeEventListeners();
+    }
+
+    async initRecording() {
+        // 防止重复初始化
+        if (this.isInitializing) return;
+        this.isInitializing = true;
+        
+        try {
+            // 检查浏览器支持
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('此浏览器不支持音频录制');
+            }
+
+            // 停止现有的音频流
+            if (this.stream) {
+                this.stream.getTracks().forEach(track => track.stop());
+            }
+
+            // 获取音频流，针对iOS优化配置
+            this.stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    channelCount: 1,
+                    sampleRate: { ideal: 44100 },
+                    sampleSize: 16,
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                }
+            });
+
+            // 权限获取成功
+            this.permissionGranted = true;
+
+            // 初始化 MediaRecorder，支持多种格式
+            try {
+                const mimeTypes = [
+                    'audio/webm',
+                    'audio/mp4',
+                    'audio/ogg',
+                    ''  // 默认格式
+                ];
+
+                // 尝试不同的音频格式
+                for (const mimeType of mimeTypes) {
+                    try {
+                        const options = mimeType ? { mimeType } : undefined;
+                        this.mediaRecorder = new MediaRecorder(this.stream, options);
+                        break; // 找到支持的格式就跳出
+                    } catch (e) {
+                        continue; // 继续尝试下一个格式
+                    }
+                }
+
+                if (!this.mediaRecorder) {
+                    throw new Error('无法创建MediaRecorder');
+                }
+
+                this.setupMediaRecorder();
+
+            } catch (error) {
+                console.error('创建MediaRecorder失败:', error);
+                throw error;
+            }
+
+        } catch (error) {
+            console.error('始化录音失败:', error);
+            this.handleRecordingError(error);
+        } finally {
+            this.isInitializing = false;
+        }
+    }
+
+    setupMediaRecorder() {
+        if (!this.mediaRecorder) return;
+
+        this.mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                this.audioChunks.push(event.data);
+            }
+        };
+
+        this.mediaRecorder.onstop = async () => {
+            if (this.audioChunks.length > 0) {
+                const audioBlob = new Blob(this.audioChunks, { 
+                    type: this.mediaRecorder.mimeType || 'audio/webm' 
+                });
+                await this.convertAndSendAudio(audioBlob);
+                this.audioChunks = [];
+            }
+        };
+
+        this.mediaRecorder.onerror = (error) => {
+            console.error('MediaRecorder错误:', error);
+            this.resetRecordingState();
+        };
+    }
+
+    handleRecordingError(error) {
+        let message = '录音初始化失败';
+        
+        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+            if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+                message = '请在iOS设置中允许浏览器问麦克风。\n设置 > Safari > 麦克风 > 允许';
+            } else {
+                message = '请允许浏览器访问麦克风';
+            }
+        } else if (error.name === 'NotFoundError') {
+            message = '未找到麦克风设备';
+        } else if (error.name === 'NotReadableError') {
+            message = '麦克风可能被其他应用程序占用';
+        }
+
+        alert(message);
+        this.permissionGranted = false;
+        this.toggleMode(); // 切回键盘模式
+    }
+
+    async toggleMode() {
+        if (this.isInitializing || this.isRecording) return;
+
+        const newMode = !this.isVoiceMode;
+        
+        if (newMode) {
+            try {
+                await this.initRecording();
+                if (this.permissionGranted) {
+                    this.isVoiceMode = true;
+                    this.updateUIForVoiceMode(true);
+                }
+            } catch (error) {
+                console.error('切换到语音模式失败:', error);
+            }
+        } else {
+            this.isVoiceMode = false;
+            this.updateUIForVoiceMode(false);
+            // 释放媒体资源
+            if (this.stream) {
+                this.stream.getTracks().forEach(track => track.stop());
+                this.stream = null;
+            }
+        }
+    }
+
+    updateUIForVoiceMode(isVoice) {
+        if (isVoice) {
+            this.toggleButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-white">
+                    <rect x="2" y="4" width="20" height="16" rx="2" ry="2"/>
+                    <path d="M6 8h.001"/><path d="M10 8h.001"/><path d="M14 8h.001"/><path d="M18 8h.001"/>
+                    <path d="M8 12h.001"/><path d="M12 12h.001"/><path d="M16 12h.001"/><path d="M7 16h10"/>
+                </svg>`;
+            this.toggleButton.classList.add('primary');
+            this.toggleButton.classList.remove('secondary');
+            this.voiceButton.style.display = 'block';
+            this.textInput.style.display = 'none';
+            this.toggleButton.title = '切换到键盘';
+        } else {
+            this.toggleButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-gray-600">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                    <line x1="12" y1="19" x2="12" y2="23"/>
+                    <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>`;
+            this.toggleButton.classList.remove('primary');
+            this.toggleButton.classList.add('secondary');
+            this.voiceButton.style.display = 'none';
+            this.textInput.style.display = 'block';
+            this.toggleButton.title = '切换到语音';
+        }
+    }
+
+    startRecording(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        if (!this.mediaRecorder || this.isRecording || this.isInitializing) return;
+        
+        try {
+            this.audioChunks = [];
+            this.mediaRecorder.start(100);
+            this.isRecording = true;
+            this.recordingStartTime = Date.now();
+            this.voiceButton.textContent = '松开发送';
+            this.voiceButton.style.backgroundColor = '#e5e7eb';
+        } catch (error) {
+            console.error('开始录音失败:', error);
+            this.resetRecordingState();
+        }
+    }
+
+    stopRecording(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        const now = Date.now();
+        if (now - this.lastTouchEnd < 300) return;
+        this.lastTouchEnd = now;
+
+        if (!this.mediaRecorder || !this.isRecording) return;
+        
+        try {
+            const duration = Date.now() - this.recordingStartTime;
+            if (duration < 500) {
+                // 录音时间太短忽略
+                this.resetRecordingState();
+                return;
+            }
+            
+            this.mediaRecorder.stop();
+            this.isRecording = false;
+            this.voiceButton.textContent = '按住说话';
+            this.voiceButton.style.backgroundColor = '#f3f4f6';
+        } catch (error) {
+            console.error('停止录音失败:', error);
+            this.resetRecordingState();
+        }
+    }
+
+    resetRecordingState() {
+        this.isRecording = false;
+        this.audioChunks = [];
+        this.voiceButton.textContent = '按住说话';
+        this.voiceButton.style.backgroundColor = '#f3f4f6';
+        this.voiceButton.disabled = false;
+        
+        if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+            try {
+                this.mediaRecorder.stop();
+            } catch (error) {
+                console.error('停止MediaRecorder失败:', error);
+            }
+        }
+    }
+
+    async convertAndSendAudio(audioBlob) {
+        try {
+            this.voiceButton.textContent = '正在转换...';
+            this.voiceButton.disabled = true;
+
+            // 创建 AudioContext 并保存到类属性中
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            try {
+                // 将 Blob 转换为 ArrayBuffer
+                const arrayBuffer = await audioBlob.arrayBuffer();
+                
+                // 解码音频数据
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                
+                // 创建新的 AudioBuffer（单声道，16位采样）
+                const newAudioBuffer = audioContext.createBuffer(1, audioBuffer.length, 44100);
+                
+                // 复制并处理音频数据
+                const channelData = audioBuffer.getChannelData(0);
+                newAudioBuffer.copyToChannel(channelData, 0);
+                
+                // 将 AudioBuffer 转换为 16位 PCM 数据
+                const pcmData = new Int16Array(channelData.length);
+                for (let i = 0; i < channelData.length; i++) {
+                    pcmData[i] = Math.max(-32768, Math.min(32767, channelData[i] * 32768));
+                }
+                
+                // 创建 WAV 文件头
+                const wavHeader = this.createWavHeader(pcmData.length * 2, 44100);
+                
+                // 合并文件头和音频数据
+                const wavBlob = new Blob([wavHeader, pcmData], { type: 'audio/wav' });
+
+                // 发送到API
+                this.voiceButton.textContent = '正在识别...';
+                
+                const formData = new FormData();
+                formData.append('file', wavBlob, 'recording.wav');
+                formData.append('model', 'whisper-1');
+                formData.append('language', 'zh');
+
+                const response = await fetch(CONFIG.VOICE_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'x-api-key': CONFIG.API_KEY
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`服务器响应错误: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('语音识别响应:', data);
+
+                if (data.text) {
+                    this.textInput.value = data.text;
+                    await window.sendMessage();
+                } else {
+                    throw new Error('未能识别语音内容');
+                }
+
+            } catch (error) {
+                console.error('处理音频失败:', error);
+                alert(`语音识别失败: ${error.message}`);
+            } finally {
+                this.voiceButton.textContent = '按住说话';
+                this.voiceButton.disabled = false;
+                // 关闭 AudioContext
+                if (audioContext) {
+                    await audioContext.close();
+                }
+            }
+        } catch (error) {
+            console.error('音频处理初始化失败:', error);
+            alert('音频处理初始化失败，请重试');
+            this.voiceButton.textContent = '按住说话';
+            this.voiceButton.disabled = false;
+        }
+    }
+
+    createWavHeader(dataLength, sampleRate) {
+        const buffer = new ArrayBuffer(44);
+        const view = new DataView(buffer);
+        
+        // RIFF chunk descriptor
+        this.writeString(view, 0, 'RIFF');
+        view.setUint32(4, 36 + dataLength, true);
+        this.writeString(view, 8, 'WAVE');
+        
+        // fmt sub-chunk
+        this.writeString(view, 12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, 1, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * 2, true);
+        view.setUint16(32, 2, true);
+        view.setUint16(34, 16, true);
+        
+        // data sub-chunk
+        this.writeString(view, 36, 'data');
+        view.setUint32(40, dataLength, true);
+        
+        return buffer;
+    }
+
+    writeString(view, offset, string) {
+        for (let i = 0; i < string.length; i++) {
+            view.setUint8(offset + i, string.charCodeAt(i));
+        }
+    }
+
+initializeEventListeners() {
+        // 切换按钮事件
+        this.toggleButton.addEventListener('click', () => this.toggleMode());
+        
+        // 语音按钮事件 - 移动设备
+        this.voiceButton.addEventListener('touchstart', (e) => this.startRecording(e), { passive: false });
+        this.voiceButton.addEventListener('touchend', (e) => this.stopRecording(e), { passive: false });
+        this.voiceButton.addEventListener('touchcancel', (e) => this.stopRecording(e), { passive: false });
+
+        // 语音按钮事件 - 桌面设备
+        this.voiceButton.addEventListener('mousedown', (e) => this.startRecording(e));
+        this.voiceButton.addEventListener('mouseup', (e) => this.stopRecording(e));
+        this.voiceButton.addEventListener('mouseleave', (e) => {
+            if (this.isRecording) {
+                this.stopRecording(e);
+            }
+        });
+        
+        // 添加页面可见性变化监听
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && this.isRecording) {
+                this.resetRecordingState();
+            }
+        });
+
+        // iOS Safari 特殊处理：页面恢复时重新初始化
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted && this.isVoiceMode) {
+                this.initRecording().catch(console.error);
+            }
+        });
+
+        // 处理iOS Safari的其他特殊情况
+        window.addEventListener('pagehide', () => {
+            if (this.isRecording) {
+                this.resetRecordingState();
+            }
+        });
+
+        // 处理页面卸载时的清理
+        window.addEventListener('beforeunload', () => {
+            if (this.stream) {
+                this.stream.getTracks().forEach(track => track.stop());
+            }
+        });
+    }
+}
+        // 图片处理类
+        class ImageHandler {
+            static handleImageUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                if (!CONFIG.SUPPORTED_IMAGE_TYPES.includes(file.type)) {
+                    alert('不支持的图片格式。请使用 JPG, PNG, GIF, 或 WEBP 格式的图片');
+                    return;
+                }
+
+                if (file.size > CONFIG.MAX_IMAGE_SIZE) {
+                    alert('图片大小不能超过10MB');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentImage = {
+                        file: file,
+                        base64: e.target.result.split(',')[1],
+                        type: file.type
+                    };
+                    
+                    ImageHandler.showImagePreview(file);
+                };
+                reader.readAsDataURL(file);
+            }
+
+            static showImagePreview(file) {
+                const existingPreview = document.querySelector('.image-preview-container');
+                if (existingPreview) {
+                    existingPreview.remove();
+                }
+
+                const previewContainer = document.createElement('div');
+                previewContainer.className = 'image-preview-container';
+                
+                const img = document.createElement('img');
+                img.className = 'image-preview';
+                img.src = URL.createObjectURL(file);
+                
+                const info = document.createElement('div');
+                info.textContent = `${file.name} (${(file.size / 1024).toFixed(1)}KB)`;
+                
+                const removeButton = document.createElement('button');
+                removeButton.className = 'remove-image';
+                removeButton.textContent = '移除';
+                removeButton.onclick = ImageHandler.removeImage;
+                
+                previewContainer.appendChild(img);
+                previewContainer.appendChild(info);
+                previewContainer.appendChild(removeButton);
+                
+                document.querySelector('.input-wrapper').appendChild(previewContainer);
+            }
+
+            static removeImage() {
+                currentImage = null;
+                document.getElementById('image-upload').value = '';
+                const previewContainer = document.querySelector('.image-preview-container');
+                if (previewContainer) {
+                    previewContainer.remove();
+                }
+            }
+        }
+
+        // API通信类
+        class ApiClient {
+            static async sendMessage(messages) {
+                let retries = 0;
+                while (retries < CONFIG.MAX_RETRIES) {
+                    try {
+                        const response = await fetch(CONFIG.API_URL, {
+                            method: 'POST',
+                            headers: {
+                                'x-api-key': CONFIG.API_KEY,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                model: "gpt-4o",
+                                messages: messages,
+                                stream: true,
+                                max_tokens: 2000
+                            })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+
+                        return response;
+                    } catch (error) {
+                        console.error(`Attempt ${retries + 1} failed:`, error);
+                        retries++;
+                        if (retries === CONFIG.MAX_RETRIES) {
+                            throw error;
+                        }
+                        await new Promise(resolve => setTimeout(resolve, CONFIG.RETRY_DELAY * retries));
+                    }
+                }
+            }
+
+            static async processStreamResponse(reader, messageDiv) {
+                const decoder = new TextDecoder();
+                let fullResponse = '';
+                let buffer = ''; // 添加缓冲区存储未完成的JSON
+
+                try {
+                    // 创建复制按钮
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'copy-btn';
+                    copyBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                        </svg>`;
+                    
+                    messageDiv.appendChild(copyBtn);
+                    
+                    copyBtn.onclick = () => {
+                        navigator.clipboard.writeText(messageDiv.innerText)
+                            .then(() => {
+                                copyBtn.innerHTML = `
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#10b981" width="14" height="14">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    </svg>`;
+                                setTimeout(() => {
+                                    copyBtn.innerHTML = `
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                        </svg>`;
+                                    }, 1000);
+                                });
+                            };
+
+                    while (true) {
+                        const { value, done } = await reader.read();
+                        if (done) break;
+
+                        const chunk = decoder.decode(value, { stream: true });
+                        buffer += chunk;  // 将新的chunk添加到buffer中
+
+                        // 处理buffer中的完整行
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop() || ''; // 保存最后一个不完整的行到buffer
+
+                        for (const line of lines) {
+                            if (line.startsWith('data: ')) {
+                                const data = line.slice(6);
+                                if (data === '[DONE]') continue;
+
+                                try {
+                                    const parsed = JSON.parse(data);
+                                    if (parsed.choices?.[0]?.delta?.content) {
+                                        const text = parsed.choices[0].delta.content;
+                                        fullResponse += text;
+                                        messageDiv.innerHTML = UI.processMarkdown(fullResponse);
+                                        messageDiv.appendChild(copyBtn);
+                                    }
+                                } catch (e) {
+                                    console.debug('Incomplete JSON chunk:', data);
+                                    continue;  // 跳过不完整的JSON
+                                }
+                            }
+                        }
+                    }
+
+                    // 处理剩余的buffer
+                    if (buffer.length > 0 && buffer.startsWith('data: ')) {
+                        try {
+                            const data = buffer.slice(6);
+                            if (data !== '[DONE]') {
+                                const parsed = JSON.parse(data);
+                                if (parsed.choices?.[0]?.delta?.content) {
+                                    const text = parsed.choices[0].delta.content;
+                                    fullResponse += text;
+                                    messageDiv.innerHTML = UI.processMarkdown(fullResponse);
+                                    messageDiv.appendChild(copyBtn);
+                                }
+                            }
+                        } catch (e) {
+                            console.debug('Incomplete final JSON chunk:', buffer);
+                        }
+                    }
+
+                    return fullResponse;
+                } catch (error) {
+                    console.error('Stream processing error:', error);
+                    throw error;
+                }
+            }
+        }
+
+        // 主要功能函数
+        async function sendMessage() {
+            if (isProcessing) return;
+            
+            const input = document.getElementById('user-input');
+            const text = input.value.trim();
+            
+            if (!text && !currentImage) return;
+            
+            isProcessing = true;
+            
+            let currentMessage = {
+                role: "user",
+                content: text
+            };
+
+            if (currentImage) {
+                currentMessage.content = [
+                    { type: "text", text: text || '' },
+                    {
+                        type: "image_url",
+                        image_url: {
+                            url: `data:${currentImage.type};base64,${currentImage.base64}`
+                        }
+                    }
+                ];
+            }
+
+            // 添加用户消息到界面
+            const chatContainer = document.getElementById('chat-container');
+            chatContainer.appendChild(UI.createMessage(text, true, currentImage));
+
+            // 清空输入
+            input.value = '';
+            ImageHandler.removeImage();
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            const loadingMessage = UI.createLoadingMessage();
+            chatContainer.appendChild(loadingMessage);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            try {
+                messages.push(currentMessage);
+                const response = await ApiClient.sendMessage(messages);
+                loadingMessage.remove();
+                
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message ai-message';
+                
+                const wrapper = document.createElement('div');
+                wrapper.className = 'message-wrapper';
+                wrapper.appendChild(messageDiv);
+                
+                chatContainer.appendChild(wrapper);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                const fullResponse = await ApiClient.processStreamResponse(
+                    response.body.getReader(),
+                    messageDiv
+                );
+
+                messages.push({
+                    role: 'assistant',
+                    content: fullResponse
+                });
+
+            } catch (error) {
+                console.error('Error sending message:', error);
+                loadingMessage.remove();
+                chatContainer.appendChild(UI.createMessage('抱歉，发生错误，请重试。', false));
+            } finally {
+                isProcessing = false;
+            }
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            new VoiceInput();
+            
+            const input = document.getElementById('user-input');
+            const sendButton = document.getElementById('send-button');
+            
+            // 发送消息事件
+            sendButton.addEventListener('click', sendMessage);
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // 图片上传事件
+            document.getElementById('image-upload').addEventListener('change', ImageHandler.handleImageUpload);
+
+            // 初始化图标
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
